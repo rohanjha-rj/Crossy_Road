@@ -1,4 +1,3 @@
-// js/main.js — Game loop, state machine, input, camera, train warnings
 import * as THREE from 'three';
 import { initScene, scene, camera, renderer, composer, updateSkyColor, setFogColor, setSunStyle, triggerBiomeSweep } from './scene.js';
 import { initWorld, updateWorld, updateObstacles, getLane, resetWorld, lanes, spawnHighscoreMarker } from './world.js';
@@ -54,7 +53,12 @@ function init() {
     initWorld();
     console.log("- World initialized.");
 
-    ui.onPlay(startGame);
+    const playBtn = document.getElementById('play-btn');
+    if (playBtn) playBtn.addEventListener('click', () => {
+      console.log("Play Button Clicked!");
+      startGame();
+    });
+    
     ui.onRestart(startGame);
     ui.onHome(gotoMenu);
 

@@ -124,7 +124,18 @@ export function spawnHighscoreMarker(zScore) {
 }
 
 export function resetWorld() {
-  for (const lane of lanes) _disposeLane(lane);
+  for (const lane of lanes) {
+    if (lane.group) {
+        lane.group.children.forEach(c => {
+            if (c.geometry) c.geometry.dispose();
+            if (c.material) {
+                if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+                else c.material.dispose();
+            }
+        });
+        scene.remove(lane.group);
+    }
+  }
   lanes     = [];
   nextLaneZ = -12;
 }
@@ -317,34 +328,6 @@ function _addBush(group, x) {
   group.add(bush);
 }
 
-export function spawnHighscoreMarker(zScore) {
-  if (zScore <= 0) return null;
-  const group = new THREE.Group();
-  const z = -zScore * TILE_SIZE;
-  
-  // Glowing Line
-  const lineGeo = new THREE.PlaneGeometry(WORLD_WIDTH, 0.4);
-  const lineMat = new THREE.MeshBasicMaterial({ 
-    color: 0xFFD700, transparent: true, opacity: 0.4, side: THREE.DoubleSide 
-  });
-  const line = new THREE.Mesh(lineGeo, lineMat);
-  line.rotation.x = -Math.PI / 2;
-  line.position.y = 0.05;
-  group.add(line);
-
-  // Label
-  const labelWrap = new THREE.Group();
-  labelWrap.position.set(0, 0.1, 0);
-  // We'll use a simple CSS2D label approach or just a sprite if needed, 
-  // but for now a simple glowing cube standing up will suffice as a "trophy" spot.
-  const trophy = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.1), lineMat);
-  trophy.position.set(0, 0.75, 0);
-  group.add(trophy);
-
-  group.position.z = z;
-  scene.add(group);
-  return group;
-}
 
 function _buildRoad(group, dir, speed, obstacles) {
   // Surface
