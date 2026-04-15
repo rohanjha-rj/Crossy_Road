@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Crossy Road – An endless arcade game. Hop across roads, rivers, and train tracks to beat your high score!" />
+  <title>Crossy Road</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ===== START SCREEN ===== -->
+  <div id="start-screen" class="screen">
+    <div class="screen-content">
+      <div class="game-logo">
+        <div id="logo-chicken" class="logo-icon-wrap">
+          <svg viewBox="0 0 24 24" class="hero-icon-svg"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+        </div>
+        <h1 class="logo-title">CROSSY<br /><span class="logo-title-green">ROAD</span></h1>
+      </div>
+
+      <div class="start-controls-bar">
+        <div class="coin-display">
+          <svg viewBox="0 0 24 24" class="icon-svg coin-svg"><circle cx="12" cy="12" r="8"/><path d="M12 9v6m-3-3h6"/></svg>
+          <span id="menu-coin-value">0</span>
+        </div>
+        <button id="sound-btn" class="icon-btn" aria-label="Toggle Sound">
+          <span id="sound-icon-wrap" class="icon-svg-wrap">
+            <svg viewBox="0 0 24 24" class="icon-svg"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="instructions">
+        <div class="instr-row"><span class="key">↑ ↓ ← →</span><span class="instr-text">Move</span></div>
+        <div class="instr-row"><span class="key">WASD</span><span class="instr-text">Also works</span></div>
+        <div class="instr-row"><span class="key">👆 Swipe</span><span class="instr-text">Mobile</span></div>
+        <div class="instr-row"><span class="key">Space / Enter</span><span class="instr-text">Start</span></div>
+      </div>
+
+      <div class="menu-button-group">
+        <button id="play-btn" class="btn-primary" aria-label="Start Game">PLAY MISSION</button>
+        <button id="gacha-btn" class="btn-secondary" aria-label="Recruit Heroes">RECRUIT HEROES</button>
+      </div>
+
+      <p class="tagline">Navigate the hazards</p>
+    </div>
+  </div>
+
+  <!-- ===== GACHA (PRIZE MACHINE) SCREEN ===== -->
+  <div id="gacha-screen" class="screen hidden">
+    <div class="machine-container">
+      <div class="machine-header">
+        <h2 class="machine-title">HERO MACHINE</h2>
+        <div class="machine-coins">
+          <svg viewBox="0 0 24 24" class="icon-svg coin-svg"><circle cx="12" cy="12" r="8"/><path d="M12 9v6m-3-3h6"/></svg>
+          <span id="gacha-coin-value">0</span>
+        </div>
+      </div>
+
+      <div class="machine-body">
+        <div class="prize-display-window">
+          <div id="prize-roller" class="prize-roller">
+            <div id="gacha-prize" class="gacha-prize">?</div>
+          </div>
+          <div class="glass-shine"></div>
+        </div>
+        
+        <div class="machine-controls">
+          <div id="gacha-status" class="machine-status">READY FOR MISSION</div>
+          
+          <button id="gacha-roll-btn" class="btn-primary gacha-roll-btn">
+            <span class="btn-label">RECRUIT (100)</span>
+            <div class="btn-sheen"></div>
+          </button>
+        </div>
+      </div>
+
+      <button id="gacha-close-btn" class="btn-secondary gacha-close-btn">BACK TO BASE</button>
+    </div>
+  </div>
+
+  <!-- ===== HUD ===== -->
+  <div id="hud" class="hidden">
+    <div id="hud-coins">
+      <svg viewBox="0 0 24 24" class="icon-svg coin-svg"><circle cx="12" cy="12" r="8"/><path d="M12 9v6m-3-3h6"/></svg>
+      <span id="hud-coin-value">0</span>
+    </div>
+    <div id="score-box">
+      <div class="hud-label">DISTANCE</div>
+      <div id="score-value">0</div>
+    </div>
+    <div id="best-box">
+      <div class="hud-label">RECORD</div>
+      <div id="best-value">0</div>
+    </div>
+  </div>
+
+  <!-- ===== GAME OVER SCREEN ===== -->
+  <div id="gameover-screen" class="screen hidden">
+    <div class="screen-content">
+      <div id="death-icon" class="status-icon-wrap">
+        <svg viewBox="0 0 24 24" class="status-icon-svg red"><path d="M12 2a5 5 0 0 0-5 5v4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2V7a5 5 0 0 0-5-5zM9 9a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm6 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM12 13a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+      </div>
+      <h2 class="death-title">MISSION FAILED</h2>
+      <div class="score-card">
+        <div class="score-card-row">
+          <span class="sc-label">Distance</span>
+          <span id="final-score" class="sc-value">0</span>
+        </div>
+        <div class="score-card-row sc-best">
+          <span class="sc-label">Record</span>
+          <span id="final-best" class="sc-value sc-value-best">0</span>
+        </div>
+        <div class="score-card-row">
+          <span class="sc-label">Near Misses</span>
+          <span id="final-misses" class="sc-value">0</span>
+        </div>
+      </div>
+      <div class="menu-button-group">
+        <button id="restart-btn" class="btn-primary" aria-label="Restart Game">RETRY MISSION</button>
+        <button id="home-btn" class="btn-secondary" aria-label="Home Screen">RETURN TO BASE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== WARNING FLASH ===== -->
+  <div id="train-warning" class="hidden">
+    <svg viewBox="0 0 24 24" class="icon-svg"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4m0 4h.01"/></svg>
+    <span>DANGER!</span>
+  </div>
+
+  <div id="milestone-toast" class="hidden">
+    <div class="milestone-content">
+      <div class="milestone-label">MILESTONE REACHED</div>
+      <div id="milestone-value">50</div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
