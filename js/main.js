@@ -290,6 +290,7 @@ function update(delta) {
           triggerBiomeSweep();
           if (score.current === 50) { setFogColor(0xFF8C00); setSunStyle(0xFFA500, 1.2); }
           else if (score.current === 100) { setFogColor(0x050515); setSunStyle(0x3366FF, 0.4); }
+          else if (score.current === 150) { setFogColor(0x1a1a1a); setSunStyle(0xffffff, 0.8); }
        }
        if (score.current % 5 === 0) { SaveManager.addCoins(5); ui.updateCoins(SaveManager.data.coins); }
        

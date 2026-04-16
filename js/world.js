@@ -146,23 +146,36 @@ function _pickType(gridZ) {
   const last = lanes.length > 0 ? lanes[lanes.length - 1] : null;
   const r    = Math.random();
   
-  // Difficulty Scaling: Higher score = less grass, more hazard lanes
-  const grassProb = Math.max(0.12, 0.38 - (currentScore * 0.005));
-  const roadProb  = Math.min(0.60, 0.45 + (currentScore * 0.003));
+  // Difficulty Scaling
+  const grassProb = Math.max(0.08, 0.40 - (currentScore * 0.007));
+  const roadProb  = Math.min(0.55, 0.40 + (currentScore * 0.004));
   
-  if (currentScore < 8) {
+  if (currentScore < 5) {
     return r < grassProb ? 'grass' : 'road';
-  } else if (currentScore < 22) {
-    if (r < grassProb)  return 'grass';
-    if (r < grassProb + roadProb)  return 'road';
-    if (last && last.type === 'river') return Math.random() < 0.5 ? 'grass' : 'road';
+  } else if (currentScore < 10) {
+    if (r < grassProb) return 'grass';
+    if (r < grassProb + roadProb) return 'road';
+    if (last && last.type === 'river') return 'grass';
     return 'river';
   } else {
-    // Advanced difficulty: introduce rails more frequently
-    if (r < grassProb)  return 'grass';
-    if (r < grassProb + roadProb)  return 'road';
-    if (last && last.type === 'river') return Math.random() < 0.5 ? 'grass' : 'road';
-    if (r < 0.82)  return 'river';
+    // Advanced: Introduce Rails (Trains)
+    if (r < grassProb) return 'grass';
+    
+    // Of the remaining 1.0 - grassProb, split between Road, River, and Rail
+    const hazardR = (r - grassProb) / (1.0 - grassProb);
+    
+    // Prevent repetitive hazardous sequences (buffer check)
+    if (last && (last.type === 'river' || last.type === 'rail')) {
+        if (Math.random() < 0.65) return 'grass';
+    }
+
+    if (hazardR < 0.62) return 'road';
+
+    // Industrial Biome Increase Rail Frequency
+    const isIndustrial = currentScore >= 150;
+    const railThreshold = isIndustrial ? 0.60 : 0.82;
+
+    if (hazardR < railThreshold) return 'river';
     return 'rail';
   }
 }
@@ -228,7 +241,8 @@ function _disposeLane(lane) {
 function _buildGrass(group, gridZ, occupiedX) {
   const isStart = gridZ === 0;
   let mats = M.grass;
-  if (currentScore >= 100) mats = M.sand;
+  if (currentScore >= 150) mats = [new THREE.MeshLambertMaterial({ color: 0x263238 }), new THREE.MeshLambertMaterial({ color: 0x37474F })]; // Industrial/Train Biome
+  else if (currentScore >= 100) mats = M.sand;
   else if (currentScore >= 50) mats = M.snow;
   const mat = isStart ? M.safeLane : mats[gridZ % mats.length];
   const ground = new THREE.Mesh(new THREE.BoxGeometry(WORLD_WIDTH, 0.22, TILE_SIZE), mat);
