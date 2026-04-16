@@ -175,4 +175,31 @@ export class UIManager {
   
   onRosterOpen(cb) { document.getElementById('roster-btn').addEventListener('click', cb); }
   onRosterClose(cb) { document.getElementById('char-back-btn').addEventListener('click', cb); }
+
+  spawnScorePopup(text = '+1') {
+    const popup = document.createElement('div');
+    popup.className = 'score-popup';
+    popup.textContent = text;
+    // Position it near the center/top where the player is usually focused
+    popup.style.left = '50%';
+    popup.style.top = '40%';
+    document.body.appendChild(popup);
+    setTimeout(() => popup.remove(), 1200);
+  }
+
+  showHighScoreNotification() {
+    if (document.getElementById('highscore-notification')) return;
+    const alert = document.createElement('div');
+    alert.id = 'highscore-notification';
+    alert.textContent = 'New High Score!';
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 3000);
+  }
+
+  triggerNearMissEffects() {
+    const overlay = document.createElement('div');
+    overlay.className = 'near-miss-overlay';
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 400);
+  }
 }

@@ -145,18 +145,24 @@ function _pickType(gridZ) {
   if (gridZ <= 2) return 'grass';
   const last = lanes.length > 0 ? lanes[lanes.length - 1] : null;
   const r    = Math.random();
+  
+  // Difficulty Scaling: Higher score = less grass, more hazard lanes
+  const grassProb = Math.max(0.12, 0.38 - (currentScore * 0.005));
+  const roadProb  = Math.min(0.60, 0.45 + (currentScore * 0.003));
+  
   if (currentScore < 8) {
-    return r < 0.38 ? 'grass' : 'road';
+    return r < grassProb ? 'grass' : 'road';
   } else if (currentScore < 22) {
-    if (r < 0.28)  return 'grass';
-    if (r < 0.65)  return 'road';
+    if (r < grassProb)  return 'grass';
+    if (r < grassProb + roadProb)  return 'road';
     if (last && last.type === 'river') return Math.random() < 0.5 ? 'grass' : 'road';
     return 'river';
   } else {
-    if (r < 0.22)  return 'grass';
-    if (r < 0.48)  return 'road';
+    // Advanced difficulty: introduce rails more frequently
+    if (r < grassProb)  return 'grass';
+    if (r < grassProb + roadProb)  return 'road';
     if (last && last.type === 'river') return Math.random() < 0.5 ? 'grass' : 'road';
-    if (r < 0.74)  return 'river';
+    if (r < 0.82)  return 'river';
     return 'rail';
   }
 }
@@ -171,15 +177,18 @@ function _buildLane(type, gridZ) {
   const occupiedX = new Set();
   if (type === 'grass') { _buildGrass(group, gridZ, occupiedX); } 
   else if (type === 'road') {
-    speed = 2.2 + Math.random() * 2.4 + currentScore * 0.038;
-    speed = Math.min(speed, 10);
-    _buildRoad(group, dir, speed, obstacles);
+    const isFastLane = currentScore > 15 && Math.random() < 0.3;
+    const speedMult = isFastLane ? 1.8 : 1.0;
+    speed = (2.2 + Math.random() * 2.4 + currentScore * 0.06) * speedMult;
+    speed = Math.min(speed, isFastLane ? 15 : 11);
+    _buildRoad(group, dir, speed, obstacles, isFastLane);
   } else if (type === 'river') {
-    speed = 1.3 + Math.random() * 1.4;
+    speed = 1.3 + Math.random() * 1.4 + (currentScore * 0.015);
+    speed = Math.min(speed, 5);
     _buildRiver(group, dir, speed, obstacles);
   } else if (type === 'rail') {
-    speed = 14 + Math.random() * 6 + currentScore * 0.08;
-    speed = Math.min(speed, 28);
+    speed = 14 + Math.random() * 6 + currentScore * 0.12;
+    speed = Math.min(speed, 35);
     const res = _buildRail(group, dir, speed, obstacles, signals);
     var warningMesh = res.warningMesh;
     signals = res.signals;
@@ -276,28 +285,65 @@ function _addBush(group, x) {
   bush.castShadow = true; group.add(bush);
 }
 
-function _buildRoad(group, dir, speed, obstacles) {
-  const surf = new THREE.Mesh(new THREE.BoxGeometry(WORLD_WIDTH, 0.16, TILE_SIZE), M.road);
+function _buildRoad(group, dir, speed, obstacles, isFastLane = false) {
+  const roadMat = isFastLane ? new THREE.MeshLambertMaterial({ color: 0x222222 }) : M.road;
+  const surf = new THREE.Mesh(new THREE.BoxGeometry(WORLD_WIDTH, 0.16, TILE_SIZE), roadMat);
   surf.position.y = -0.08; surf.receiveShadow = true; group.add(surf);
+  
+  const edgeColor = isFastLane ? 0xFF0000 : 0xFFCC02;
   const edgeGeo = new THREE.BoxGeometry(WORLD_WIDTH, 0.02, 0.06);
-  [0.68, -0.68].forEach(z => { const e = new THREE.Mesh(edgeGeo, M.roadEdge); e.position.set(0, 0.01, z); group.add(e); });
+  const edgeMat = new THREE.MeshLambertMaterial({ color: edgeColor });
+  [0.68, -0.68].forEach(z => { const e = new THREE.Mesh(edgeGeo, edgeMat); e.position.set(0, 0.01, z); group.add(e); });
+  
   const dashGeo = new THREE.BoxGeometry(0.45, 0.01, 0.10);
   for (let i = GRID_MIN_X; i <= GRID_MAX_X; i++) {
     const d = new THREE.Mesh(dashGeo, M.roadDash); d.position.set(i * TILE_SIZE, 0.015, 0); group.add(d);
   }
-  const isAmbulance = Math.random() < 0.1 && currentScore > 10;
+  
+  const isAmbulance = !isFastLane && Math.random() < 0.1 && currentScore > 10;
   if (isAmbulance) {
     speed = 28; const amb = _createAmbulance(dir);
     amb.worldX = dir > 0 ? -WORLD_WIDTH * 1.5 : WORLD_WIDTH * 1.5;
     amb.mesh.position.x = amb.worldX; group.add(amb.mesh); obstacles.push(amb);
   } else {
-    const numCars = 2 + Math.floor(Math.random() * 3);
+    // Dynamic Spacing: More score = potentially more cars & tighter/more random spacing
+    const baseCars = isFastLane ? 1 : 2;
+    const numCars = baseCars + Math.floor(Math.random() * (currentScore > 30 ? 4 : 3));
+    const spread = WORLD_WIDTH / numCars;
+    
     for (let i = 0; i < numCars; i++) {
-      const car = _createCar(dir); const spread = WORLD_WIDTH / numCars;
-      car.worldX = -WORLD_WIDTH / 2 + spread * i + spread * 0.1 + Math.random() * spread * 0.8;
+      const useTruck = Math.random() < 0.3;
+      const car = useTruck ? _createTruck(dir) : _createCar(dir);
+      // More chaotic spacing
+      const randomOffset = (Math.random() - 0.5) * spread * 0.7;
+      car.worldX = -WORLD_WIDTH / 2 + spread * i + spread * 0.5 + randomOffset;
       car.mesh.position.x = car.worldX; group.add(car.mesh); obstacles.push(car);
     }
   }
+}
+
+function _createTruck(dir) {
+  const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
+  const bodyMat = new THREE.MeshLambertMaterial({ color });
+  const cargoMat = new THREE.MeshLambertMaterial({ color: 0xEEEEEE });
+  const grp = new THREE.Group();
+  
+  // Cab
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.9), bodyMat);
+  cab.position.set(dir > 0 ? 0.8 : -0.8, 0.4, 0); cab.castShadow = true; grp.add(cab);
+  
+  // Cargo Bed/Container
+  const cargo = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 0.95), cargoMat);
+  cargo.position.set(dir > 0 ? -0.3 : 0.3, 0.5, 0); cargo.castShadow = true; grp.add(cargo);
+  
+  const wGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.15, 8);
+  [[0.8,0.2,0.5], [0.8,0.2,-0.5], [-0.2,0.2,0.5], [-0.2,0.2,-0.5], [-0.8,0.2,0.5], [-0.8,0.2,-0.5]].forEach(([x, y, z]) => {
+    const w = new THREE.Mesh(wGeo, M.wheel); w.rotation.x = Math.PI/2; 
+    w.position.set(dir > 0 ? x : -x, y, z); grp.add(w);
+  });
+  
+  if (dir < 0) grp.rotation.y = Math.PI;
+  return { mesh: grp, worldX: 0, halfWidth: 1.2, direction: dir, speed: 0, type: 'truck' };
 }
 
 function _createAmbulance(dir) {

@@ -26,6 +26,8 @@ let playerIdleTimer = 0;
 let lastPlayerGridZ = 0;
 let eagleMesh = null;
 let hsMarker = null;
+let timeScale = 1.0;
+let hasNotifiedHS = false;
 
 function init() {
   console.log("Main: Initializing...");
@@ -155,10 +157,15 @@ function init() {
     let prev = performance.now();
     (function loop(now) {
       requestAnimationFrame(loop);
-      const delta = Math.min((now - prev) / 1000, 0.1);
+      const scaledDelta = Math.min((now - prev) / 1000, 0.1) * timeScale;
+      const delta = Math.min((now - prev) / 1000, 0.1); // True delta for non-gameplay things if needed
       prev = now;
+      
+      // Gradually return timeScale to 1.0
+      if (timeScale < 1.0) timeScale = Math.min(1.0, timeScale + delta * 1.5);
+
       try {
-        update(delta);
+        update(scaledDelta);
         const composer = getComposer();
         const renderer = getRenderer();
         const sc = getScene();
@@ -187,6 +194,8 @@ function startGame() {
   initWorld(); 
   score.reset();
   player.reset();
+  hasNotifiedHS = false;
+  timeScale = 1.0;
   
   // Start in air
   player.worldY = 12;
@@ -276,12 +285,20 @@ function update(delta) {
     const oldScore = score.current;
     score.update(player.gridZ, getLane(player.gridZ)?.type);
     if (score.current > oldScore) {
+       ui.spawnScorePopup('+1');
        if (score.current % 50 === 0) {
           triggerBiomeSweep();
           if (score.current === 50) { setFogColor(0xFF8C00); setSunStyle(0xFFA500, 1.2); }
           else if (score.current === 100) { setFogColor(0x050515); setSunStyle(0x3366FF, 0.4); }
        }
        if (score.current % 5 === 0) { SaveManager.addCoins(5); ui.updateCoins(SaveManager.data.coins); }
+       
+       if (score.current > SaveManager.data.bestScore && SaveManager.data.bestScore > 0 && !hasNotifiedHS) {
+         ui.showHighScoreNotification();
+         hasNotifiedHS = true;
+         audio.playCoin(); 
+       }
+       
        if (score.best > SaveManager.data.bestScore) { SaveManager.data.bestScore = score.best; SaveManager.save(); }
     }
     updateWorld(player.gridZ, score.current);
@@ -329,15 +346,20 @@ function update(delta) {
 }
 
 function _checkForProximityHazards(delta) {
-  for (let z = player.gridZ; z <= player.gridZ + 1; z++) {
+  for (let z = player.gridZ - 1; z <= player.gridZ + 1; z++) {
     const lane = getLane(z);
     if (!lane || (lane.type !== 'road' && lane.type !== 'rail')) continue;
     for (const obs of lane.obstacles) {
       const dx = Math.abs(obs.worldX - player.worldX);
       const dz = Math.abs((z * 2.0) - player.worldZ);
-      if (dx < 2.2 && dz < 1.0) {
-        _cameraShake(0.12, 0.05);
-        if (!obs._wasNearMiss) { score.addNearMiss(); obs._wasNearMiss = true; }
+      if (dx < 2.0 && dz < 0.8) {
+        if (!obs._wasNearMiss) { 
+          score.addNearMiss(); 
+          obs._wasNearMiss = true;
+          timeScale = 0.25; // SLOW MO!
+          ui.triggerNearMissEffects();
+          _cameraShake(0.2, 0.1);
+        }
       }
     }
   }
