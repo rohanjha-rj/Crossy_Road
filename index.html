@@ -54,6 +54,7 @@
       <div class="menu-button-group">
         <button id="play-btn" class="btn-primary" aria-label="Start Game">PLAY MISSION</button>
         <button id="gacha-btn" class="btn-secondary" aria-label="Recruit Heroes">RECRUIT HEROES</button>
+        <button id="roster-btn" class="btn-secondary" aria-label="Character Roster">HERO ROSTER</button>
       </div>
 
       <p class="tagline">Navigate the hazards</p>
@@ -107,6 +108,9 @@
       <div class="hud-label">RECORD</div>
       <div id="best-value">0</div>
     </div>
+    <button id="pause-btn" class="icon-btn" aria-label="Pause Game" style="pointer-events: auto;">
+      <svg viewBox="0 0 24 24" class="icon-svg"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+    </button>
   </div>
 
   <!-- ===== GAME OVER SCREEN ===== -->
@@ -134,6 +138,31 @@
         <button id="restart-btn" class="btn-primary" aria-label="Restart Game">RETRY MISSION</button>
         <button id="home-btn" class="btn-secondary" aria-label="Home Screen">RETURN TO BASE</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== PAUSE MENU ===== -->
+  <div id="pause-screen" class="screen hidden">
+    <div class="screen-content">
+      <h2 class="death-title">PAUSED</h2>
+      <div class="menu-button-group">
+        <button id="resume-btn" class="btn-primary">RESUME MISSION</button>
+        <button id="pause-restart-btn" class="btn-secondary">RESTART</button>
+        <button id="pause-home-btn" class="btn-secondary">QUIT TO BASE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CHARACTER GALLERY ===== -->
+  <div id="char-screen" class="screen hidden">
+    <div class="screen-content" style="width: min(480px, 94vw);">
+      <h2 class="death-title">HERO ROSTER</h2>
+      
+      <div id="char-grid" class="char-grid">
+        <!-- JS will populate this -->
+      </div>
+
+      <button id="char-back-btn" class="btn-secondary">BACK TO BASE</button>
     </div>
   </div>
 

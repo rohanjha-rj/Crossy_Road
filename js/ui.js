@@ -12,7 +12,10 @@ export class UIManager {
     this.finalBest      = $('final-best');
     this._warnTimeout   = null;
 
+    this.pauseScreen    = $('pause-screen');
+    this.charScreen     = $('char-screen');
     this.gachaScreen    = $('gacha-screen');
+    this.charGrid       = $('char-grid');
     this.menuCoins      = $('menu-coin-value');
     this.hudCoins       = $('hud-coin-value');
     this.gachaCoins     = $('gacha-coin-value');
@@ -28,6 +31,8 @@ export class UIManager {
     this.hud.classList.add('hidden');
     this.gameoverScreen.classList.add('hidden');
     this.gachaScreen.classList.add('hidden');
+    this.pauseScreen.classList.add('hidden');
+    this.charScreen.classList.add('hidden');
   }
 
   showGame(best) {
@@ -35,12 +40,56 @@ export class UIManager {
     this.hud.classList.remove('hidden');
     this.gameoverScreen.classList.add('hidden');
     this.gachaScreen.classList.add('hidden');
+    this.pauseScreen.classList.add('hidden');
+    this.charScreen.classList.add('hidden');
     this.scoreVal.textContent = '0';
     this.bestVal.textContent  = best;
   }
 
+  showPause() {
+    this.pauseScreen.classList.remove('hidden');
+  }
+
+  hidePause() {
+    this.pauseScreen.classList.add('hidden');
+  }
+
+  showRoster() {
+    this.startScreen.classList.add('hidden');
+    this.charScreen.classList.remove('hidden');
+  }
+
+  hideRoster() {
+    this.charScreen.classList.add('hidden');
+    this.startScreen.classList.remove('hidden');
+  }
+
+  renderRoster(data, current, onSelect) {
+    this.charGrid.innerHTML = '';
+    const charIcons = { 'chicken': '🐔', 'penguin': '🐧', 'robot': '🤖' };
+    const charNames = { 'chicken': 'CHICKEN', 'penguin': 'PENGUIN', 'robot': 'ROBOT' };
+    
+    ['chicken', 'penguin', 'robot'].forEach(id => {
+      const unlocked = data.unlockedChars.includes(id);
+      const item = document.createElement('div');
+      item.className = `char-item ${unlocked ? '' : 'locked'} ${id === current ? 'selected' : ''}`;
+      
+      item.innerHTML = `
+        <div class="char-icon">${charIcons[id]}</div>
+        <div class="char-name">${charNames[id]}</div>
+        ${!unlocked ? '<div class="char-hint">LOCKED<br/>ROLL IN GACHA</div>' : ''}
+      `;
+      
+      if (unlocked) {
+        item.onclick = () => onSelect(id);
+      }
+      this.charGrid.appendChild(item);
+    });
+  }
+
   showGameOver(score, best, nearMisses) {
     this.hud.classList.add('hidden');
+    this.pauseScreen.classList.add('hidden');
     this.finalScore.textContent = score;
     this.finalBest.textContent  = best;
     const missesEl = document.getElementById('final-misses');
@@ -118,4 +167,12 @@ export class UIManager {
   onGachaRoll(cb) { document.getElementById('gacha-roll-btn').addEventListener('click', cb); }
   onHome(cb) { document.getElementById('home-btn').addEventListener('click', cb); }
   onToggleSound(cb) { this.soundBtn.addEventListener('click', cb); }
+  
+  onPause(cb) { document.getElementById('pause-btn').addEventListener('click', cb); }
+  onResume(cb) { document.getElementById('resume-btn').addEventListener('click', cb); }
+  onPauseRestart(cb) { document.getElementById('pause-restart-btn').addEventListener('click', cb); }
+  onPauseHome(cb) { document.getElementById('pause-home-btn').addEventListener('click', cb); }
+  
+  onRosterOpen(cb) { document.getElementById('roster-btn').addEventListener('click', cb); }
+  onRosterClose(cb) { document.getElementById('char-back-btn').addEventListener('click', cb); }
 }

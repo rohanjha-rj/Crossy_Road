@@ -1,127 +1,125 @@
-// js/scene.js — Three.js scene, camera, renderer, lighting
+// js/scene.js — Three.js scene, camera, renderer
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
-export let scene, camera, renderer, composer, fog, sun;
-let timeOfDay = 0.15; // Start in daytime
+let _scene, _camera, _renderer, _composer, _sun, _fog;
+let timeOfDay = 0.15;
 
 export function initScene() {
-  // ── Scene ──
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xB8E0FF);
+  console.log("Scene: Initializing components...");
   
-  fog = new THREE.Fog(0xB8E0FF, 18, 42);
-  scene.fog = fog;
+  _scene = new THREE.Scene();
+  _scene.background = new THREE.Color(0xB8E0FF);
+  
+  _fog = new THREE.Fog(0xB8E0FF, 20, 45);
+  _scene.fog = _fog;
 
-  // ── Renderer ──
-  renderer = new THREE.WebGLRenderer({
+  _renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('game-canvas'),
     antialias: true,
+    powerPreference: 'high-performance'
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  _renderer.setSize(window.innerWidth, window.innerHeight);
+  _renderer.shadowMap.enabled = true;
+  _renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  // ── Camera ──
-  camera = new THREE.PerspectiveCamera(
+  _camera = new THREE.PerspectiveCamera(
     55,
     window.innerWidth / window.innerHeight,
     0.1,
-    120
+    200
   );
-  camera.position.set(0, 10, 8);
-  camera.lookAt(0, 0, 0);
+  _camera.position.set(0, 12, 10);
+  _camera.lookAt(0, 0, 0);
 
-  // ── Ambient light ──
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  // Lighting
+  _scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  
+  _sun = new THREE.DirectionalLight(0xfff8e1, 1.3);
+  _sun.position.set(10, 20, 10);
+  _sun.castShadow = true;
+  _sun.shadow.mapSize.set(1024, 1024);
+  _sun.shadow.camera.near = 1;
+  _sun.shadow.camera.far = 100;
+  _sun.shadow.camera.left = -30;
+  _sun.shadow.camera.right = 30;
+  _sun.shadow.camera.top = 30;
+  _sun.shadow.camera.bottom = -30;
+  _scene.add(_sun);
 
-  // ── Sunlight (with shadows) ──
-  sun = new THREE.DirectionalLight(0xfff8e1, 1.45);
-  sun.position.set(7, 20, 10);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.near   = 1;
-  sun.shadow.camera.far    = 90;
-  sun.shadow.camera.left   = -28;
-  sun.shadow.camera.right  =  28;
-  sun.shadow.camera.top    =  28;
-  sun.shadow.camera.bottom = -28;
-  sun.shadow.bias = -0.0008;
-  scene.add(sun);
+  _scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7c44, 0.4));
 
-  // ── Hemisphere (sky / ground bounce) ──
-  scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7c44, 0.48));
+  // Post processing
+  try {
+    _composer = new EffectComposer(_renderer);
+    const renderPass = new RenderPass(_scene, _camera);
+    _composer.addPass(renderPass);
+    const bloom = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.5, 0.4, 0.8
+    );
+    _composer.addPass(bloom);
+    console.log("Scene: Composer ready.");
+  } catch (e) {
+    console.warn("Scene: Composer failed.", e);
+    _composer = null;
+  }
 
-  // ── Post Processing (Bloom) ──
-  composer = new EffectComposer(renderer);
-  const renderPass = new RenderPass(scene, camera);
-  composer.addPass(renderPass);
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.6, 0.5, 0.75);
-  composer.addPass(bloomPass);
-
-  // ── Resize handler ──
   window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+    _camera.aspect = window.innerWidth / window.innerHeight;
+    _camera.updateProjectionMatrix();
+    _renderer.setSize(window.innerWidth, window.innerHeight);
+    if (_composer) _composer.setSize(window.innerWidth, window.innerHeight);
   });
 }
 
-/** Biome styling hooks */
+// Getters to ensure live bounds aren't broken by reassignment
+export const getScene = () => _scene;
+export const getCamera = () => _camera;
+export const getRenderer = () => _renderer;
+export const getComposer = () => _composer;
+export const getSun = () => _sun;
+
+// Direct exports for compatibility if needed, but getters are safer
+export { _scene as scene, _camera as camera, _renderer as renderer, _composer as composer };
+
 export function setFogColor(color) {
   const col = new THREE.Color(color);
-  scene.background = col;
-  scene.fog.color  = col;
+  _scene.background = col;
+  _scene.fog.color = col;
 }
 
 export function setSunStyle(color, intensity) {
-  sun.color.set(color);
-  sun.intensity = intensity;
+  _sun.color.set(color);
+  _sun.intensity = intensity;
 }
 
 export function triggerBiomeSweep() {
-  if (composer) {
-    const bloom = composer.passes[1];
-    bloom.strength = 1.5;
-    setTimeout(() => { bloom.strength = 0.6; }, 200);
+  if (_composer) {
+    const bloom = _composer.passes[1];
+    bloom.strength = 1.2;
+    setTimeout(() => { bloom.strength = 0.5; }, 250);
   }
 }
 
-/** Smoothly update sky / fog tint to create day/night cycle */
 export function updateSkyColor(delta) {
-  // We keep this automated but allow biomes to override intensity
-  timeOfDay = (timeOfDay + delta * 0.01) % 1.0; 
-
+  timeOfDay = (timeOfDay + delta * 0.005) % 1.0; 
   let r, g, b;
-  if (timeOfDay < 0.4) {
-    // Day
-    [r, g, b] = [0.72, 0.88, 1.0];
-    sun.intensity = 1.45;
-  } else if (timeOfDay < 0.5) {
-    // Dusk (Golden Hour into Night)
+  if (timeOfDay < 0.4) { [r,g,b] = [0.7,0.85,1.0]; _sun.intensity=1.3; }
+  else if (timeOfDay < 0.5) {
     const t = (timeOfDay - 0.4) / 0.1;
-    r = 0.72 + t * (0.05 - 0.72);
-    g = 0.88 + t * (0.05 - 0.88);
-    b = 1.0  + t * (0.15 - 1.0);
-    sun.intensity = 1.45 * (1 - t) + 0.1;
-  } else if (timeOfDay < 0.9) {
-    // Night
-    [r, g, b] = [0.05, 0.05, 0.15];
-    sun.intensity = 0.1;
-  } else {
-    // Dawn
+    r = 0.7 + t*(0.05-0.7); g = 0.85 + t*(0.05-0.85); b = 1.0 + t*(0.15-1.0);
+    _sun.intensity = 1.3 * (1-t) + 0.1;
+  } else if (timeOfDay < 0.9) { [r,g,b] = [0.05,0.05,0.15]; _sun.intensity=0.1; }
+  else {
     const t = (timeOfDay - 0.9) / 0.1;
-    r = 0.05 + t * (0.72 - 0.05);
-    g = 0.05 + t * (0.88 - 0.05);
-    b = 0.15 + t * (1.0  - 0.15);
-    sun.intensity = 0.1 + t * 1.35;
+    r = 0.05+t*(0.7-0.05); g = 0.05+t*(0.85-0.05); b = 0.15+t*(1.0-0.15);
+    _sun.intensity = 0.1 + t*1.2;
   }
-
-  const col = new THREE.Color(r, g, b);
-  scene.background = col;
-  scene.fog.color = col;
+  const col = new THREE.Color(r,g,b);
+  _scene.background = col;
+  _scene.fog.color = col;
 }
