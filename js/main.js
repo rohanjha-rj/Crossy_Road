@@ -93,25 +93,57 @@ function init() {
     ui.onGachaClose(() => ui.hideGacha());
     ui.onGachaRoll(() => {
       if (SaveManager.spendCoins(100)) {
+        const rollBtn = document.getElementById('gacha-roll-btn');
+        if (rollBtn) rollBtn.disabled = true;
+
         ui.startRolling();
         ui.updateCoins(SaveManager.data.coins);
-        const chars = ['chicken', 'penguin', 'robot'];
-        const names = ['CHICKEN', 'PENGUIN', 'ROBOT'];
+        
+        // --- Expanded Roster & Smart Roll ---
+        const allChars = ['chicken', 'penguin', 'robot', 'frog', 'pigeon', 'duck'];
+        const allNames = {
+          'chicken': 'CHICKEN', 'penguin': 'PENGUIN', 'robot': 'ROBOT', 
+          'frog': 'FROG', 'pigeon': 'PIGEON', 'duck': 'DUCK'
+        };
+        const allIcons = {
+          'chicken': '🐔', 'penguin': '🐧', 'robot': '🤖',
+          'frog': '🐸', 'pigeon': '🐦', 'duck': '🦆'
+        };
+
         setTimeout(() => {
-          const r = Math.floor(Math.random() * chars.length);
-          SaveManager.unlockChar(chars[r]);
-          SaveManager.data.currentChar = chars[r];
+          // Identify locked characters
+          const locked = allChars.filter(c => !SaveManager.data.unlockedChars.includes(c));
+          
+          let result;
+          let wasUnlocked = false;
+
+          if (locked.length > 0) {
+            // GUARANTEE a new character if any are locked!
+            result = locked[Math.floor(Math.random() * locked.length)];
+            wasUnlocked = false; 
+          } else {
+            // If all unlocked, just pick any (duplicate)
+            result = allChars[Math.floor(Math.random() * allChars.length)];
+            wasUnlocked = true;
+          }
+
+          SaveManager.unlockChar(result);
+          SaveManager.data.currentChar = result;
           SaveManager.save();
+          
           ui.stopRolling();
-          ui.setGachaPrize(names[r]);
-          ui.updateGachaStatus('NEW CHARACTER!');
+          ui.setGachaPrize(allIcons[result] || '❓');
+          ui.updateGachaStatus(wasUnlocked ? 'UNIT RE-CALIBRATED' : `NEW HERO: ${allNames[result]}!`);
+          
           audio.playCoin();
-          if (logoEl) logoEl.textContent = charIconMap[chars[r]] || '🐔';
+          if (logoEl) logoEl.textContent = allIcons[result] || '🐔';
+          
           scene.remove(player.mesh);
           player.mesh = player._buildMesh();
           scene.add(player.mesh);
           player._syncMesh();
-        }, 1800);
+          if (rollBtn) rollBtn.disabled = false;
+        }, 2200); // Slightly longer roll for suspense
       } else {
         ui.updateGachaStatus('NOT ENOUGH COINS!');
         audio.playDeath();

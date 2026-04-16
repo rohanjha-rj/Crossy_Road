@@ -77,6 +77,30 @@ export class Player {
       add(new THREE.SphereGeometry(0.08,8,8), Mz.red, 0,1.35,0);
       add(new THREE.BoxGeometry(0.2,0.2,0.8), Mz.gray, -0.45,0.1,0);
       add(new THREE.BoxGeometry(0.2,0.2,0.8), Mz.gray, 0.45,0.1,0);
+    } else if (charType === 'frog') {
+      const Mz = { green: new THREE.MeshLambertMaterial({color:0x4CAF50}), white: new THREE.MeshLambertMaterial({color:0xFFFFFF}), dark: new THREE.MeshLambertMaterial({color:0x212121}) };
+      add(new THREE.BoxGeometry(0.8,0.5,0.7), Mz.green, 0,0.3,0);
+      add(new THREE.SphereGeometry(0.2,8,8), Mz.green, -0.25,0.55,0);
+      add(new THREE.SphereGeometry(0.2,8,8), Mz.green, 0.25,0.55,0);
+      add(new THREE.SphereGeometry(0.08,8,8), Mz.dark, -0.25,0.6,-0.1);
+      add(new THREE.SphereGeometry(0.08,8,8), Mz.dark, 0.25,0.6,-0.1);
+      add(new THREE.BoxGeometry(0.2,0.2,0.5), Mz.green, -0.45,0.1,0);
+      add(new THREE.BoxGeometry(0.2,0.2,0.5), Mz.green, 0.45,0.1,0);
+    } else if (charType === 'duck') {
+      const Mz = { yellow: new THREE.MeshLambertMaterial({color:0xFFEB3B}), orange: new THREE.MeshLambertMaterial({color:0xFF9800}), dark: new THREE.MeshLambertMaterial({color:0x212121}) };
+      add(new THREE.BoxGeometry(0.7,0.6,0.6), Mz.yellow, 0,0.35,0);
+      add(new THREE.BoxGeometry(0.5,0.4,0.5), Mz.yellow, 0,0.8,0);
+      add(new THREE.BoxGeometry(0.4,0.15,0.3), Mz.orange, 0,0.75,-0.35);
+      add(new THREE.SphereGeometry(0.06,8,8), Mz.dark, -0.15,0.85,-0.22);
+      add(new THREE.SphereGeometry(0.06,8,8), Mz.dark, 0.15,0.85,-0.22);
+    } else if (charType === 'pigeon') {
+      const Mz = { gray: new THREE.MeshLambertMaterial({color:0x9E9E9E}), purple: new THREE.MeshLambertMaterial({color:0x673AB7}), dark: new THREE.MeshLambertMaterial({color:0x212121}) };
+      add(new THREE.BoxGeometry(0.6,0.7,0.5), Mz.gray, 0,0.4,0);
+      add(new THREE.BoxGeometry(0.4,0.45,0.4), Mz.gray, 0,0.9,0);
+      add(new THREE.BoxGeometry(0.3,0.15,0.3), Mz.purple, 0,0.7,0);
+      add(new THREE.BoxGeometry(0.1,0.15,0.2), Mz.dark, 0,0.85,-0.28);
+      add(new THREE.SphereGeometry(0.06,8,8), Mz.dark, -0.1,0.95,-0.18);
+      add(new THREE.SphereGeometry(0.06,8,8), Mz.dark, 0.1,0.95,-0.18);
     } else {
       add(new THREE.BoxGeometry(0.64,0.70,0.58), M.yellow, 0,0.43,0);
       add(new THREE.BoxGeometry(0.54,0.50,0.52), M.yellow, 0,0.92,0);

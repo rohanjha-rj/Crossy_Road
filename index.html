@@ -61,11 +61,11 @@
     </div>
   </div>
 
-  <!-- ===== GACHA (PRIZE MACHINE) SCREEN ===== -->
+  <!-- ===== RECRUIT HEROES SECTION ===== -->
   <div id="gacha-screen" class="screen hidden">
     <div class="machine-container">
       <div class="machine-header">
-        <h2 class="machine-title">HERO MACHINE</h2>
+        <h2 class="machine-title">RECRUIT HEROES</h2>
         <div class="machine-coins">
           <svg viewBox="0 0 24 24" class="icon-svg coin-svg"><circle cx="12" cy="12" r="8"/><path d="M12 9v6m-3-3h6"/></svg>
           <span id="gacha-coin-value">0</span>
@@ -77,20 +77,18 @@
           <div id="prize-roller" class="prize-roller">
             <div id="gacha-prize" class="gacha-prize">?</div>
           </div>
-          <div class="glass-shine"></div>
         </div>
         
         <div class="machine-controls">
-          <div id="gacha-status" class="machine-status">READY FOR MISSION</div>
+          <div id="gacha-status" class="machine-status">RECRUITMENT TERMINAL READY</div>
           
           <button id="gacha-roll-btn" class="btn-primary gacha-roll-btn">
-            <span class="btn-label">RECRUIT (100)</span>
-            <div class="btn-sheen"></div>
+            <span class="btn-label">EXPEND 100 COINS</span>
           </button>
+
+          <button id="gacha-close-btn" class="btn-secondary gacha-close-btn">BACK TO CAMP</button>
         </div>
       </div>
-
-      <button id="gacha-close-btn" class="btn-secondary gacha-close-btn">BACK TO BASE</button>
     </div>
   </div>
 

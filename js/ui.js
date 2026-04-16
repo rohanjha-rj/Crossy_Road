@@ -66,10 +66,10 @@ export class UIManager {
 
   renderRoster(data, current, onSelect) {
     this.charGrid.innerHTML = '';
-    const charIcons = { 'chicken': '🐔', 'penguin': '🐧', 'robot': '🤖' };
-    const charNames = { 'chicken': 'CHICKEN', 'penguin': 'PENGUIN', 'robot': 'ROBOT' };
+    const charIcons = { 'chicken': '🐔', 'penguin': '🐧', 'robot': '🤖', 'frog': '🐸', 'pigeon': '🐦', 'duck': '🦆' };
+    const charNames = { 'chicken': 'CHICKEN', 'penguin': 'PENGUIN', 'robot': 'ROBOT', 'frog': 'FROG', 'pigeon': 'PIGEON', 'duck': 'DUCK' };
     
-    ['chicken', 'penguin', 'robot'].forEach(id => {
+    ['chicken', 'penguin', 'robot', 'frog', 'pigeon', 'duck'].forEach(id => {
       const unlocked = data.unlockedChars.includes(id);
       const item = document.createElement('div');
       item.className = `char-item ${unlocked ? '' : 'locked'} ${id === current ? 'selected' : ''}`;
@@ -123,7 +123,7 @@ export class UIManager {
   showGacha() {
     this.startScreen.classList.add('hidden');
     this.gachaScreen.classList.remove('hidden');
-    this.gachaPrize.textContent = 'SECRET';
+    this.gachaPrize.textContent = '❓';
     this.gachaStatus.textContent = 'READY TO ROLL';
     this.gachaPrize.classList.remove('prize-win');
   }
